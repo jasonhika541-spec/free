@@ -1,0 +1,100 @@
+name: Test Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Clean problematic directories
+      run: |
+        if [ -d "READM1E.md" ]; then
+          rm -rf READM1E.md
+          echo "Removed problematic READM1E.md directory"
+        fi
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest-stable'
+    
+    - name: Install Theos (Minimal)
+      run: |
+        export THEOS=/opt/theos
+        echo "Installing Theos to $THEOS"
+        
+        sudo rm -rf $THEOS || true
+        sudo git clone --recursive https://github.com/theos/theos.git $THEOS
+        sudo chown -R $(id -u):$(id -g) $THEOS
+        
+        # Use any available iOS SDK
+        XCODE_PATH=$(xcode-select -p)
+        IOS_SDK_PATH="$XCODE_PATH/Platforms/iPhoneOS.platform/Developer/SDKs"
+        
+        # Just link the first available SDK as iPhoneOS.sdk
+        FIRST_SDK=$(ls "$IOS_SDK_PATH" | grep "iPhoneOS.*\.sdk" | head -1)
+        if [ -n "$FIRST_SDK" ]; then
+          echo "Using SDK: $FIRST_SDK"
+          ln -sf "$IOS_SDK_PATH/$FIRST_SDK" "$THEOS/sdks/iPhoneOS.sdk"
+        fi
+        
+        echo "THEOS=/opt/theos" >> $GITHUB_ENV
+        echo "PATH=/opt/theos/bin:$PATH" >> $GITHUB_ENV
+    
+    - name: Install dependencies
+      run: |
+        brew install ldid
+    
+    - name: Test build
+      run: |
+        export THEOS=/opt/theos
+        export PATH=/opt/theos/bin:$PATH
+        export TARGET="iphone:clang"
+        
+        echo "Testing build with minimal setup..."
+        echo "THEOS: $THEOS"
+        echo "TARGET: $TARGET"
+        
+        # Show what we have
+        ls -la $THEOS/sdks/
+        ls -la headers/
+        
+        # Try the simplest possible build
+        make clean || true
+        
+        # Build with explicit target and minimal flags
+        make package \
+          TARGET=iphone:clang \
+          FINALPACKAGE=1 \
+          FOR_RELEASE=1 \
+          crepware_CFLAGS="-Iheaders -Isources -Isources/KIF -fobjc-arc" \
+          V=1
+        
+        # Check result
+        if [ -d ".theos/_/Applications/crepware.app" ]; then
+          echo "✅ Test build successful!"
+          
+          # Create .tipa
+          mkdir -p packages Payload
+          cp -r .theos/_/Applications/crepware.app Payload/
+          cd Payload && zip -r ../packages/crepware.tipa . && cd ..
+          rm -rf Payload
+          
+          echo "✅ .tipa created successfully"
+          ls -lh packages/crepware.tipa
+        else
+          echo "❌ Test build failed"
+          exit 1
+        fi
+    
+    - name: Upload test artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: crepware-test-build
+        path: packages/crepware.tipa
+        retention-days: 7

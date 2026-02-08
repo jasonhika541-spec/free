@@ -111,6 +111,20 @@ jobs:
         echo "Available SDKs in Theos:"
         ls -la $THEOS/sdks/
         
+        # Test SDK detection logic
+        echo "Testing SDK detection:"
+        ls $THEOS/sdks/ | grep "iPhoneOS.*\.sdk" || echo "No versioned SDKs found"
+        ls $THEOS/sdks/ | grep "iPhoneOS[0-9].*\.sdk" || echo "No numbered SDKs found"
+        
+        # Show what makefile would detect
+        echo "Makefile SDK detection test:"
+        AVAILABLE_SDKS=$(ls $THEOS/sdks/ 2>/dev/null | grep "iPhoneOS[0-9].*\.sdk" | head -1)
+        echo "AVAILABLE_SDKS: '$AVAILABLE_SDKS'"
+        if [ -n "$AVAILABLE_SDKS" ]; then
+          SDK_VERSION=$(echo "$AVAILABLE_SDKS" | sed 's/iPhoneOS\([0-9]*\.[0-9]*\)\.sdk/\1/')
+          echo "SDK_VERSION: '$SDK_VERSION'"
+        fi
+        
         # Check headers directory
         echo "Headers directory contents:"
         ls -la headers/
@@ -135,11 +149,17 @@ jobs:
         # Clean and build
         make clean || true
         
-        # Try building with different makefile variants
-        if make -f makefile.absolute package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
-          echo "✅ Build successful with absolute makefile!"
+        # Set explicit TARGET to avoid SDK detection issues
+        export TARGET="iphone:clang"
+        echo "Using TARGET: $TARGET"
+        
+        # Try building with different makefile variants (from simplest to complex)
+        if make -f makefile.noversion package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
+          echo "✅ Build successful with no-version makefile!"
         elif make -f makefile.simple package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
           echo "✅ Build successful with simple makefile!"
+        elif make -f makefile.absolute package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
+          echo "✅ Build successful with absolute makefile!"
         else
           echo "All makefiles failed, trying with manual flags..."
           

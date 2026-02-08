@@ -8,7 +8,7 @@
 #import <cstdint>
 #import <spawn.h>
 #import <notify.h>
-#import "rootless.h"
+#import "../headers/rootless.h"
 #import <mach-o/dyld.h>
 
 #import "HUDHelper.h"

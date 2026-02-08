@@ -9,7 +9,7 @@
 //
 
 #import "IOHIDEvent+KIF.h"
-#import "UITouch+Private.h"
+#import "../headers/UITouch+Private.h"
 #import <UIKit/UIKit.h>
 
 @interface UITouch (KIFAdditions)

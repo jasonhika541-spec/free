@@ -10,7 +10,7 @@
 #import "HUDHelper.h"
 #import "MainApplication.h"
 #import "RootViewController.h"
-#import "UIApplication+Private.h"
+#import "../headers/UIApplication+Private.h"
 
 static const CGFloat _gAuthorLabelBottomConstraintConstantCompact = -20.f;
 static const CGFloat _gAuthorLabelBottomConstraintConstantRegular = -80.f;

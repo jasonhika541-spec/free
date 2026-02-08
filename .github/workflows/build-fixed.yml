@@ -1,0 +1,67 @@
+name: Build Fixed
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Clean
+      run: rm -rf READM1E.md || true
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest-stable'
+    
+    - name: Install Theos
+      run: |
+        export THEOS=/opt/theos
+        sudo rm -rf $THEOS || true
+        sudo git clone --recursive https://github.com/theos/theos.git $THEOS
+        sudo chown -R $(id -u):$(id -g) $THEOS
+        
+        # Link iOS SDK
+        XCODE_PATH=$(xcode-select -p)
+        IOS_SDK_PATH="$XCODE_PATH/Platforms/iPhoneOS.platform/Developer/SDKs"
+        FIRST_SDK=$(ls "$IOS_SDK_PATH" | grep "iPhoneOS.*\.sdk" | head -1)
+        ln -sf "$IOS_SDK_PATH/$FIRST_SDK" "$THEOS/sdks/iPhoneOS.sdk"
+        
+        echo "THEOS=/opt/theos" >> $GITHUB_ENV
+        echo "PATH=/opt/theos/bin:$PATH" >> $GITHUB_ENV
+    
+    - name: Install ldid
+      run: brew install ldid
+    
+    - name: Build
+      run: |
+        export THEOS=/opt/theos
+        export PATH=/opt/theos/bin:$PATH
+        export TARGET="iphone:clang"
+        
+        make clean || true
+        make -f makefile.noversion package FINALPACKAGE=1 FOR_RELEASE=1
+    
+    - name: Create .tipa
+      run: |
+        mkdir -p packages Payload
+        cp -r .theos/_/Applications/crepware.app Payload/
+        cd Payload && zip -rq ../packages/crepware.tipa .
+        cd .. && rm -rf Payload
+        ls -lh packages/crepware.tipa
+    
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: crepware-tipa-fixed
+        path: packages/crepware.tipa
+        retention-days: 30

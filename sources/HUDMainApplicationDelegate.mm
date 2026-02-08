@@ -12,8 +12,8 @@
 #import "HUDMainApplicationDelegate.h"
 #import "HUDMainWindow.h"
 
-#import "SBSAccessibilityWindowHostingController.h"
-#import "UIWindow+Private.h"
+#import "../headers/SBSAccessibilityWindowHostingController.h"
+#import "../headers/UIWindow+Private.h"
 
 #import "../esp/drawing_view/esp.h"
 #import "UIView+SecureView.h"

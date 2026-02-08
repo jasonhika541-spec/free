@@ -10,7 +10,26 @@
 #import "HUDHelper.h"
 #import "MainApplication.h"
 #import "RootViewController.h"
-#import "UIApplication+Private.h"
+
+// UIApplication+Private.h content
+#import <UIKit/UIKit.h>
+
+// IOKit+SPI.h content (needed for UIApplication+Private)
+typedef struct __IOHIDEvent *IOHIDEventRef;
+typedef struct __IOHIDNotification *IOHIDNotificationRef;
+typedef struct __IOHIDService *IOHIDServiceRef;
+typedef struct __GSEvent *GSEventRef;
+
+@interface UIApplication (Private)
+- (UIEvent *)_touchesEvent;
+- (void)_run;
+- (void)suspend;
+- (void)_accessibilityInit;
+- (void)terminateWithSuccess;
+- (void)__completeAndRunAsPlugin;
+- (id)_systemAnimationFenceExemptQueue;
+- (void)_enqueueHIDEvent:(IOHIDEventRef)event;
+@end
 
 static const CGFloat _gAuthorLabelBottomConstraintConstantCompact = -20.f;
 static const CGFloat _gAuthorLabelBottomConstraintConstantRegular = -80.f;

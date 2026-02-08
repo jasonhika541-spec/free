@@ -583,6 +583,85 @@ mach_vm_address_t get_image_base_address(mach_port_t task, const char *image_nam
     return 0;
 }
 
+// monoArray template definition (needed for Dictionary)
+template <typename T>
+struct monoArray
+{
+    task_t   task;
+    uintptr_t address;
+
+    monoArray()
+        : task(MACH_PORT_NULL)
+        , address(0)
+    {
+    }
+
+    monoArray(task_t t, uintptr_t addr)
+        : task(t)
+        , address(addr)
+    {
+    }
+
+    int get_Length() const
+    {
+        if (!address || !task)
+            return 0;
+
+        struct Header
+        {
+            void* klass;
+            void* monitor;
+            void* bounds;
+            int   max_length;
+        };
+
+        Header h = Read<Header>(address, task);
+        return h.max_length;
+    }
+
+    T operator [] (int i) const
+    {
+        if (!address || !task)
+            return T();
+
+        struct Layout
+        {
+            void* klass;
+            void* monitor;
+            void* bounds;
+            int   max_length;
+            T     first;
+        };
+
+        uintptr_t elem_addr =
+            address +
+            static_cast<uintptr_t>(offsetof(Layout, first)) +
+            static_cast<uintptr_t>(sizeof(T)) * static_cast<uintptr_t>(i);
+
+        return Read<T>(elem_addr, task);
+    }
+
+    T operator [] (int i)
+    {
+        return static_cast<const monoArray&>(*this)[i];
+    }
+
+    bool Contains(T item) const
+    {
+        int len = get_Length();
+        for (int i = 0; i < len; ++i)
+        {
+            T v = (*this)[i];
+            if (v == item)
+                return true;
+        }
+        return false;
+    }
+};
+
+template<typename T>
+using Array = monoArray<T>;
+
 // Dictionary template definition (from Unity API)
 template<typename TKey, typename TValue>
 struct Dictionary
@@ -806,85 +885,6 @@ struct Dictionary
         return ValueCollection(this);
     }
 };
-
-// monoArray template definition (needed for Dictionary)
-template <typename T>
-struct monoArray
-{
-    task_t   task;
-    uintptr_t address;
-
-    monoArray()
-        : task(MACH_PORT_NULL)
-        , address(0)
-    {
-    }
-
-    monoArray(task_t t, uintptr_t addr)
-        : task(t)
-        , address(addr)
-    {
-    }
-
-    int get_Length() const
-    {
-        if (!address || !task)
-            return 0;
-
-        struct Header
-        {
-            void* klass;
-            void* monitor;
-            void* bounds;
-            int   max_length;
-        };
-
-        Header h = Read<Header>(address, task);
-        return h.max_length;
-    }
-
-    T operator [] (int i) const
-    {
-        if (!address || !task)
-            return T();
-
-        struct Layout
-        {
-            void* klass;
-            void* monitor;
-            void* bounds;
-            int   max_length;
-            T     first;
-        };
-
-        uintptr_t elem_addr =
-            address +
-            static_cast<uintptr_t>(offsetof(Layout, first)) +
-            static_cast<uintptr_t>(sizeof(T)) * static_cast<uintptr_t>(i);
-
-        return Read<T>(elem_addr, task);
-    }
-
-    T operator [] (int i)
-    {
-        return static_cast<const monoArray&>(*this)[i];
-    }
-
-    bool Contains(T item) const
-    {
-        int len = get_Length();
-        for (int i = 0; i < len; ++i)
-        {
-            T v = (*this)[i];
-            if (v == item)
-                return true;
-        }
-        return false;
-    }
-};
-
-template<typename T>
-using Array = monoArray<T>;
 
 struct ESPBox {
     Vector3 pos;

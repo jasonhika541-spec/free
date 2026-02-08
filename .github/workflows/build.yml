@@ -92,6 +92,12 @@ jobs:
             if [ -n "$LATEST_SDK" ]; then
               echo "Found SDK: $LATEST_SDK"
               ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/$LATEST_SDK"
+              
+              # Create compatibility links for different versions
+              ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS.sdk"
+              ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS16.5.sdk"
+              ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS17.0.sdk"
+              
               SDK_INSTALLED=true
             fi
           fi

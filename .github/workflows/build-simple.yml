@@ -44,14 +44,30 @@ jobs:
         echo "Looking for iOS SDKs in: $IOS_SDK_PATH"
         ls -la "$IOS_SDK_PATH"
         
+        # Use Xcode's built-in iOS SDK
+        XCODE_PATH=$(xcode-select -p)
+        IOS_SDK_PATH="$XCODE_PATH/Platforms/iPhoneOS.platform/Developer/SDKs"
+        
+        echo "Looking for iOS SDKs in: $IOS_SDK_PATH"
+        ls -la "$IOS_SDK_PATH"
+        
         # Find and link the latest iOS SDK
         LATEST_SDK=$(ls "$IOS_SDK_PATH" | grep "iPhoneOS.*\.sdk" | sort -V | tail -1)
         if [ -n "$LATEST_SDK" ]; then
           echo "Using iOS SDK: $LATEST_SDK"
           ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/$LATEST_SDK"
           
-          # Also create a generic link
+          # Create multiple compatibility links
           ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS.sdk"
+          ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS16.5.sdk"
+          ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS17.0.sdk"
+          
+          # Extract version number and create version-specific link
+          SDK_VERSION=$(echo "$LATEST_SDK" | sed 's/iPhoneOS\([0-9]*\.[0-9]*\)\.sdk/\1/')
+          if [ -n "$SDK_VERSION" ]; then
+            echo "SDK Version: $SDK_VERSION"
+            ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/iPhoneOS${SDK_VERSION}.sdk"
+          fi
         else
           echo "❌ No iOS SDK found in Xcode"
           exit 1
@@ -82,9 +98,24 @@ jobs:
         echo "Building with Theos..."
         echo "THEOS: $THEOS"
         
+        # Show available SDKs
+        echo "Available SDKs in Theos:"
+        ls -la $THEOS/sdks/
+        
+        # Use simple makefile without SDK version specification
+        echo "Using simplified makefile..."
+        cp makefile.simple makefile.backup
+        
         # Clean and build
         make clean || true
-        make package FINALPACKAGE=1 FOR_RELEASE=1
+        
+        # Try building with simple makefile first
+        if make -f makefile.simple package FINALPACKAGE=1 FOR_RELEASE=1; then
+          echo "✅ Build successful with simple makefile!"
+        else
+          echo "Simple makefile failed, trying original..."
+          make package FINALPACKAGE=1 FOR_RELEASE=1 TARGET=iphone:clang || exit 1
+        fi
         
         # Check build result
         if [ -d ".theos/_/Applications/crepware.app" ]; then

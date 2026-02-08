@@ -1,0 +1,64 @@
+# Theos build artifacts
+.theos/
+packages/
+obj/
+*.deb
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+build/
+DerivedData/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+Payload/
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Compiled Object files
+*.o
+*.obj
+
+# Archives
+*.a
+*.lib
+
+# Shared objects
+*.so
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Local environment files
+.env
+.env.local
+
+# Backup files
+*~
+*.bak
+*.swp
+*.swo
+
+# READM1E.md problematic directory
+READM1E.md/

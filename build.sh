@@ -7,6 +7,12 @@ set -e
 
 echo "🚀 Starting TrollSpeed build process..."
 
+# Clean problematic directories
+if [ -d "READM1E.md" ]; then
+    echo "🧹 Removing problematic READM1E.md directory..."
+    rm -rf READM1E.md
+fi
+
 # Check if Theos is installed
 if [ -z "$THEOS" ]; then
     echo "❌ THEOS environment variable not set"
@@ -46,6 +52,8 @@ make package FINALPACKAGE=1 FOR_RELEASE=1
 # Check if build was successful
 if [ ! -d ".theos/_/Applications/crepware.app" ]; then
     echo "❌ Build failed - crepware.app not found"
+    echo "Available files in .theos/_/Applications/:"
+    ls -la .theos/_/Applications/ || echo "Directory not found"
     exit 1
 fi
 

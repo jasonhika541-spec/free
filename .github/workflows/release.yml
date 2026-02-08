@@ -14,8 +14,14 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    
+    - name: Clean problematic directories
+      run: |
+        # Remove problematic READM1E.md directory if it exists
+        if [ -d "READM1E.md" ]; then
+          rm -rf READM1E.md
+          echo "Removed problematic READM1E.md directory"
+        fi
     
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1

@@ -143,6 +143,27 @@ T Read(uintptr_t address, task_t task)
     return data;
 }
 
+// Vector3 structure (needed for Unity API)
+struct Vector3
+{
+    union
+    {
+        struct
+        {
+            float x;
+            float y;
+            float z;
+        };
+        float data[3];
+    };
+
+    inline Vector3() : x(0), y(0), z(0) {}
+    inline Vector3(float data[]) : x(data[0]), y(data[1]), z(data[2]) {}
+    inline Vector3(float value) : x(value), y(value), z(value) {}
+    inline Vector3(float x, float y) : x(x), y(y), z(0) {}
+    inline Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
+};
+
 struct Vector4
 {
     float x, y, z, w;

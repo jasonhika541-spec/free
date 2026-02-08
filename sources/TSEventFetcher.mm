@@ -9,9 +9,34 @@
 #import <string.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import "TSEventFetcher.h"
-#import "UIEvent+Private.h"
+
+// UIEvent+Private.h content
+#import <UIKit/UIKit.h>
+
+@interface UIEvent (Private)
+- (void)_addTouch:(UITouch *)touch forDelayedDelivery:(BOOL)delayed;
+- (void)_clearTouches;
+@end
+
 #import "UITouch-KIFAdditions.h"
-#import "UIApplication+Private.h"
+
+// UIApplication+Private.h content
+// IOKit+SPI.h content (needed for UIApplication+Private)
+typedef struct __IOHIDEvent *IOHIDEventRef;
+typedef struct __IOHIDNotification *IOHIDNotificationRef;
+typedef struct __IOHIDService *IOHIDServiceRef;
+typedef struct __GSEvent *GSEventRef;
+
+@interface UIApplication (Private)
+- (UIEvent *)_touchesEvent;
+- (void)_run;
+- (void)suspend;
+- (void)_accessibilityInit;
+- (void)terminateWithSuccess;
+- (void)__completeAndRunAsPlugin;
+- (id)_systemAnimationFenceExemptQueue;
+- (void)_enqueueHIDEvent:(IOHIDEventRef)event;
+@end
 
 static NSArray *_safeTouchAry = nil;
 static NSMutableArray *_touchAry = nil;

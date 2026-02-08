@@ -13,9 +13,9 @@
 
 #import "HUDHelper.h"
 #import "TSEventFetcher.h"
-#import "../headers/BackboardServices.h"
-#import "../headers/AXEventRepresentation.h"
-#import "../headers/UIApplication+Private.h"
+#import "BackboardServices.h"
+#import "AXEventRepresentation.h"
+#import "UIApplication+Private.h"
 
 NSString *mDeviceModel(void) {
     struct utsname systemInfo;

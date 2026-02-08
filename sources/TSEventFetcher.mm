@@ -9,9 +9,9 @@
 #import <string.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import "TSEventFetcher.h"
-#import "../headers/UIEvent+Private.h"
+#import "UIEvent+Private.h"
 #import "UITouch-KIFAdditions.h"
-#import "../headers/UIApplication+Private.h"
+#import "UIApplication+Private.h"
 
 static NSArray *_safeTouchAry = nil;
 static NSMutableArray *_touchAry = nil;

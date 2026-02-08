@@ -62,3 +62,14 @@ Payload/
 
 # READM1E.md problematic directory
 READM1E.md/
+
+# Copied headers in sources
+sources/*.h
+!sources/HUDHelper.h
+!sources/HUDMainApplication.h
+!sources/HUDMainApplicationDelegate.h
+!sources/HUDMainWindow.h
+!sources/MainApplication.h
+!sources/MainApplicationDelegate.h
+!sources/RootViewController.h
+!sources/TSEventFetcher.h

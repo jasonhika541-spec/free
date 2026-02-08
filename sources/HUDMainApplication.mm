@@ -11,11 +11,11 @@
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
 
-#import "../headers/pac_helper.h"
-#import "../headers/UIEventFetcher.h"
-#import "../headers/UIEventDispatcher.h"
+#import "pac_helper.h"
+#import "UIEventFetcher.h"
+#import "UIEventDispatcher.h"
 #import "HUDMainApplication.h"
-#import "../headers/UIApplication+Private.h"
+#import "UIApplication+Private.h"
 
 @implementation HUDMainApplication
 

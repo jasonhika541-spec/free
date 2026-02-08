@@ -83,8 +83,9 @@ mach_port_t get_task_for_PID(pid_t pid)
 pid_t get_pid_by_name(const char *keyword)
 {
     int count = proc_listallpids(NULL, 0);
-    pid_t pids[count];
-    proc_listallpids(pids, sizeof(pids));
+    pid_t *pids = (pid_t*)malloc(count * sizeof(pid_t));
+    if (!pids) return -1;
+    proc_listallpids(pids, count * sizeof(pid_t));
     
     for (int i = 0; i < count; i++)
     {
@@ -92,10 +93,13 @@ pid_t get_pid_by_name(const char *keyword)
         proc_name(pids[i], name, sizeof(name));
         if (strstr(name, keyword) != NULL)
         {
-            return pids[i];
+            pid_t result = pids[i];
+            free(pids);
+            return result;
         }
     }
     
+    free(pids);
     return -1;
 }
 

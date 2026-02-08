@@ -13,9 +13,62 @@
 
 #import "HUDHelper.h"
 #import "TSEventFetcher.h"
-#import "BackboardServices.h"
-#import "AXEventRepresentation.h"
-#import "UIApplication+Private.h"
+
+// BackboardServices.h content
+#import <Foundation/Foundation.h>
+
+// IOKit+SPI.h content
+typedef struct __IOHIDEvent *IOHIDEventRef;
+typedef struct __IOHIDNotification *IOHIDNotificationRef;
+typedef struct __IOHIDService *IOHIDServiceRef;
+typedef struct __GSEvent *GSEventRef;
+
+#if __cplusplus
+extern "C" {
+#endif
+void *BKSHIDEventRegisterEventCallback(void (*)(void *, void *, IOHIDServiceRef, IOHIDEventRef));
+void UIApplicationInstantiateSingleton(id aclass);
+void UIApplicationInitialize();
+void BKSDisplayServicesStart();
+void GSInitialize();
+void GSEventInitialize(Boolean registerPurple);
+void GSEventPopRunLoopMode(CFStringRef mode);
+void GSEventPushRunLoopMode(CFStringRef mode);
+void GSEventRegisterEventCallBack(void (*)(GSEventRef));
+#if __cplusplus
+}
+#endif
+
+// AXEventHandInfoRepresentation forward declaration
+@class AXEventHandInfoRepresentation;
+
+// AXEventRepresentation.h content
+@interface AXEventRepresentation : NSObject
+@property (nonatomic, readonly) BOOL isTouchDown; 
+@property (nonatomic, readonly) BOOL isMove; 
+@property (nonatomic, readonly) BOOL isChordChange; 
+@property (nonatomic, readonly) BOOL isLift; 
+@property (nonatomic, readonly) BOOL isInRange; 
+@property (nonatomic, readonly) BOOL isInRangeLift; 
+@property (nonatomic, readonly) BOOL isCancel; 
++ (instancetype)representationWithHIDEvent:(IOHIDEventRef)event hidStreamIdentifier:(NSString *)identifier;
+- (AXEventHandInfoRepresentation *)handInfo;
+- (CGPoint)location;
+@end
+
+// UIApplication+Private.h content
+#import <UIKit/UIKit.h>
+
+@interface UIApplication (Private)
+- (UIEvent *)_touchesEvent;
+- (void)_run;
+- (void)suspend;
+- (void)_accessibilityInit;
+- (void)terminateWithSuccess;
+- (void)__completeAndRunAsPlugin;
+- (id)_systemAnimationFenceExemptQueue;
+- (void)_enqueueHIDEvent:(IOHIDEventRef)event;
+@end
 
 NSString *mDeviceModel(void) {
     struct utsname systemInfo;

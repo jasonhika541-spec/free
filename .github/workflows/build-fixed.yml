@@ -48,15 +48,6 @@ jobs:
         export PATH=/opt/theos/bin:$PATH
         export TARGET="iphone:clang"
         
-        # Copy all headers to sources directory
-        echo "Copying headers to sources..."
-        cp headers/*.h sources/
-        cp headers/*.h sources/KIF/
-        
-        # Verify headers were copied
-        echo "Headers in sources:"
-        ls -la sources/*.h | head -5
-        
         make clean || true
         make -f makefile.noversion package FINALPACKAGE=1 FOR_RELEASE=1
     

@@ -26,7 +26,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '15.2'
+        xcode-version: 'latest-stable'
     
     - name: Install Theos
       run: |
@@ -43,10 +43,21 @@ jobs:
         
         # Install iOS SDK
         echo "Downloading iOS SDK..."
-        curl -LO https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz
         
-        echo "Extracting iOS SDK..."
-        tar -xf iPhoneOS16.5.sdk.tar.xz -C $THEOS/sdks/
+        # Try to download iOS 16.5 SDK first
+        if curl -LO https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz; then
+          echo "Extracting iOS 16.5 SDK..."
+          tar -xf iPhoneOS16.5.sdk.tar.xz -C $THEOS/sdks/
+        else
+          echo "iOS 16.5 SDK not found, trying iOS 17.0 SDK..."
+          if curl -LO https://github.com/theos/sdks/releases/download/master/iPhoneOS17.0.sdk.tar.xz; then
+            tar -xf iPhoneOS17.0.sdk.tar.xz -C $THEOS/sdks/
+          else
+            echo "Trying latest available SDK..."
+            curl -LO https://github.com/theos/sdks/releases/latest/download/iPhoneOS.sdk.tar.xz
+            tar -xf iPhoneOS.sdk.tar.xz -C $THEOS/sdks/
+          fi
+        fi
         
         # Verify installation
         echo "Verifying Theos installation..."

@@ -1,0 +1,108 @@
+name: Build TrollSpeed
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.2'
+    
+    - name: Install Theos
+      run: |
+        # Install Theos
+        export THEOS=/opt/theos
+        sudo git clone --recursive https://github.com/theos/theos.git $THEOS
+        sudo chown -R $(id -u):$(id -g) $THEOS
+        
+        # Install iOS SDK
+        curl -LO https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz
+        tar -xf iPhoneOS16.5.sdk.tar.xz -C $THEOS/sdks/
+        
+        # Set environment variables
+        echo "THEOS=/opt/theos" >> $GITHUB_ENV
+        echo "PATH=/opt/theos/bin:$PATH" >> $GITHUB_ENV
+    
+    - name: Install dependencies
+      run: |
+        # Install ldid for code signing
+        brew install ldid
+        
+        # Verify Theos installation
+        ls -la $THEOS
+        ls -la $THEOS/sdks/
+    
+    - name: Build project
+      run: |
+        # Set Theos environment
+        export THEOS=/opt/theos
+        export PATH=/opt/theos/bin:$PATH
+        
+        # Build the project
+        make clean
+        make package
+    
+    - name: Create .tipa file
+      run: |
+        # Create packages directory if it doesn't exist
+        mkdir -p packages
+        
+        # Remove existing packages to avoid conflicts
+        rm -rf packages/*
+        
+        # Create Payload directory
+        mkdir -p Payload
+        
+        # Copy the built app to Payload
+        cp -r .theos/_/Applications/crepware.app Payload/
+        
+        # Create .tipa file
+        cd Payload
+        zip -r ../packages/crepware.tipa .
+        cd ..
+        
+        # Clean up
+        rm -rf Payload
+        
+        # Verify the .tipa file was created
+        ls -la packages/
+    
+    - name: Upload .tipa artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: crepware-tipa
+        path: packages/crepware.tipa
+        retention-days: 30
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          packages/
+          .theos/_/
+        retention-days: 7
+    
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: packages/crepware.tipa
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

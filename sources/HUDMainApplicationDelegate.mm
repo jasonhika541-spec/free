@@ -12,8 +12,19 @@
 #import "HUDMainApplicationDelegate.h"
 #import "HUDMainWindow.h"
 
-#import "SBSAccessibilityWindowHostingController.h"
-#import "UIWindow+Private.h"
+// SBSAccessibilityWindowHostingController.h content
+#import <Foundation/Foundation.h>
+
+@interface SBSAccessibilityWindowHostingController : NSObject
+- (void)registerWindowWithContextID:(unsigned)arg1 atLevel:(double)arg2;
+@end
+
+// UIWindow+Private.h content
+#import <UIKit/UIKit.h>
+
+@interface UIWindow (Private)
+- (unsigned int)_contextId;
+@end
 
 #import "../esp/drawing_view/esp.h"
 #import "UIView+SecureView.h"

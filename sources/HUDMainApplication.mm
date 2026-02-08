@@ -10,6 +10,7 @@
 #import <mach/mach.h>
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
+#import <CoreFoundation/CoreFoundation.h>
 
 // pac_helper.h content
 #ifndef PTRAUTH_HELPERS_H

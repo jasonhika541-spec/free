@@ -35,16 +35,42 @@ jobs:
         sudo chown -R $(id -u):$(id -g) $THEOS
         
         # Install iOS SDK
-        if curl -LO https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz; then
-          tar -xf iPhoneOS16.5.sdk.tar.xz -C $THEOS/sdks/
-        else
-          echo "iOS 16.5 SDK not found, trying iOS 17.0 SDK..."
-          if curl -LO https://github.com/theos/sdks/releases/download/master/iPhoneOS17.0.sdk.tar.xz; then
-            tar -xf iPhoneOS17.0.sdk.tar.xz -C $THEOS/sdks/
-          else
-            curl -LO https://github.com/theos/sdks/releases/latest/download/iPhoneOS.sdk.tar.xz
-            tar -xf iPhoneOS.sdk.tar.xz -C $THEOS/sdks/
+        SDK_INSTALLED=false
+        
+        # Try iOS 16.5 SDK
+        if curl -f -L -o iPhoneOS16.5.sdk.tar.xz "https://github.com/theos/sdks/releases/download/master/iPhoneOS16.5.sdk.tar.xz" 2>/dev/null; then
+          if tar -tf iPhoneOS16.5.sdk.tar.xz >/dev/null 2>&1; then
+            tar -xf iPhoneOS16.5.sdk.tar.xz -C $THEOS/sdks/
+            SDK_INSTALLED=true
           fi
+        fi
+        
+        # Try alternative source
+        if [ "$SDK_INSTALLED" = false ]; then
+          if curl -f -L -o iPhoneOS.sdk.tar.xz "https://github.com/xybp888/iOS-SDKs/releases/download/iOS-SDKs/iPhoneOS16.5.sdk.tar.xz" 2>/dev/null; then
+            if tar -tf iPhoneOS.sdk.tar.xz >/dev/null 2>&1; then
+              tar -xf iPhoneOS.sdk.tar.xz -C $THEOS/sdks/
+              SDK_INSTALLED=true
+            fi
+          fi
+        fi
+        
+        # Use Xcode's built-in SDK
+        if [ "$SDK_INSTALLED" = false ]; then
+          XCODE_PATH=$(xcode-select -p)
+          IOS_SDK_PATH="$XCODE_PATH/Platforms/iPhoneOS.platform/Developer/SDKs"
+          if [ -d "$IOS_SDK_PATH" ]; then
+            LATEST_SDK=$(ls "$IOS_SDK_PATH" | grep "iPhoneOS.*\.sdk" | sort -V | tail -1)
+            if [ -n "$LATEST_SDK" ]; then
+              ln -sf "$IOS_SDK_PATH/$LATEST_SDK" "$THEOS/sdks/$LATEST_SDK"
+              SDK_INSTALLED=true
+            fi
+          fi
+        fi
+        
+        if [ "$SDK_INSTALLED" = false ]; then
+          echo "Failed to install iOS SDK"
+          exit 1
         fi
         
         echo "THEOS=/opt/theos" >> $GITHUB_ENV

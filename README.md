@@ -9,10 +9,15 @@ The code is completely mine, I wrote it for some idiot
 
 Проект настроен для автоматической сборки через GitHub Actions. При каждом push в main/master ветку создается .tipa файл.
 
+### Доступные workflows:
+- **build.yml** - Полная сборка с fallback для SDK
+- **build-simple.yml** - Упрощенная сборка с Xcode SDK
+- **release.yml** - Сборка релизов при создании тегов
+
 ### Скачать готовую сборку:
 1. Перейдите в раздел [Actions](../../actions)
 2. Выберите последний успешный build
-3. Скачайте артефакт `crepware-tipa`
+3. Скачайте артефакт `crepware-tipa` или `crepware-tipa-simple`
 
 ### Создать релиз:
 1. Создайте тег: `git tag v1.0.0`

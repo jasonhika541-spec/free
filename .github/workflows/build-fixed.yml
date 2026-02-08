@@ -1,4 +1,4 @@
-name: Build Fixed
+name: Build iOS App
 
 on:
   push:
@@ -14,9 +14,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    
-    - name: Clean
-      run: rm -rf READM1E.md || true
     
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -43,7 +40,7 @@ jobs:
     - name: Install ldid
       run: brew install ldid
     
-    - name: Build
+    - name: Build Application
       run: |
         export THEOS=/opt/theos
         export PATH=/opt/theos/bin:$PATH
@@ -52,17 +49,18 @@ jobs:
         make clean || true
         make -f makefile.noversion package FINALPACKAGE=1 FOR_RELEASE=1
     
-    - name: Create .tipa
+    - name: Create .tipa Package
       run: |
         mkdir -p packages Payload
         cp -r .theos/_/Applications/crepware.app Payload/
         cd Payload && zip -rq ../packages/crepware.tipa .
         cd .. && rm -rf Payload
         ls -lh packages/crepware.tipa
+        echo "✅ .tipa package created successfully"
     
-    - name: Upload
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: crepware-tipa-fixed
+        name: crepware-tipa
         path: packages/crepware.tipa
         retention-days: 30

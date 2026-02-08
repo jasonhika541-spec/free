@@ -20,7 +20,7 @@ $(APPLICATION_NAME)_FILES += $(wildcard esp/helpers/*.mm)
 $(APPLICATION_NAME)_FILES += $(wildcard esp/unity_api/*.m)
 $(APPLICATION_NAME)_FILES += $(wildcard esp/unity_api/*.mm)
 
-$(APPLICATION_NAME)_CFLAGS += -fobjc-arc -Wno-deprecated-declarations -Wno-unused-variable -Wno-unused-value -Wno-module-import-in-extern-c -Wunused-but-set-variable
+$(APPLICATION_NAME)_CFLAGS += -fobjc-arc -Wno-deprecated-declarations -Wno-unused-variable -Wno-unused-value -Wno-module-import-in-extern-c -Wunused-but-set-variable -Wno-vla-cxx-extension
 $(APPLICATION_NAME)_CFLAGS += -Iheaders
 $(APPLICATION_NAME)_CFLAGS += -Isources
 $(APPLICATION_NAME)_CFLAGS += -Isources/KIF

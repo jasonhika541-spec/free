@@ -73,6 +73,15 @@ jobs:
           exit 1
         fi
         
+        # Copy project headers to Theos include directory
+        echo "Copying project headers to Theos..."
+        mkdir -p $THEOS/vendor/include/
+        cp -r headers/* $THEOS/vendor/include/ 2>/dev/null || true
+        
+        # Also copy to a custom include directory
+        mkdir -p $THEOS/include/
+        cp -r headers/* $THEOS/include/ 2>/dev/null || true
+        
         # Verify SDK installation
         echo "Installed SDKs:"
         ls -la $THEOS/sdks/
@@ -102,19 +111,42 @@ jobs:
         echo "Available SDKs in Theos:"
         ls -la $THEOS/sdks/
         
-        # Use simple makefile without SDK version specification
+        # Check headers directory
+        echo "Headers directory contents:"
+        ls -la headers/
+        
+        # Check current directory structure
+        echo "Current directory:"
+        pwd
+        ls -la
+        
+        # Test if headers are accessible
+        echo "Testing header file access:"
+        test -f "headers/BackboardServices.h" && echo "✅ BackboardServices.h found" || echo "❌ BackboardServices.h not found"
+        
+        # Show compiler include paths
+        echo "Testing compiler include paths:"
+        clang -v -E -x objective-c /dev/null -I headers 2>&1 | grep "include" || true
+        
+        # Use simple makefile with absolute paths
         echo "Using simplified makefile..."
         cp makefile.simple makefile.backup
         
         # Clean and build
         make clean || true
         
-        # Try building with simple makefile first
-        if make -f makefile.simple package FINALPACKAGE=1 FOR_RELEASE=1; then
+        # Try building with different makefile variants
+        if make -f makefile.absolute package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
+          echo "✅ Build successful with absolute makefile!"
+        elif make -f makefile.simple package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
           echo "✅ Build successful with simple makefile!"
         else
-          echo "Simple makefile failed, trying original..."
-          make package FINALPACKAGE=1 FOR_RELEASE=1 TARGET=iphone:clang || exit 1
+          echo "All makefiles failed, trying with manual flags..."
+          
+          # Try with manual compiler flags
+          CURRENT_DIR=$(pwd)
+          make package FINALPACKAGE=1 FOR_RELEASE=1 TARGET=iphone:clang \
+            crepware_CFLAGS="-I${CURRENT_DIR}/headers -I${CURRENT_DIR}/sources -I${CURRENT_DIR}/sources/KIF -I${THEOS}/vendor/include -I${THEOS}/include -fobjc-arc -Wno-deprecated-declarations" || exit 1
         fi
         
         # Check build result

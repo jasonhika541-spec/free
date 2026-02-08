@@ -11,11 +11,64 @@
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
 
-#import "pac_helper.h"
-#import "UIEventFetcher.h"
-#import "UIEventDispatcher.h"
+// pac_helper.h content
+#ifndef PTRAUTH_HELPERS_H
+#define PTRAUTH_HELPERS_H
+
+#if __arm64e__
+#include <ptrauth.h>
+#endif
+
+static void *make_sym_callable(void *ptr) {
+#if __arm64e__
+    if (!ptr) return ptr;
+    ptr = ptrauth_sign_unauthenticated(ptrauth_strip(ptr, ptrauth_key_function_pointer), ptrauth_key_function_pointer, 0);
+#endif
+    return ptr;
+}
+
+static void *make_sym_readable(void *ptr) {
+#if __arm64e__
+    if (!ptr) return ptr;
+    ptr = ptrauth_strip(ptr, ptrauth_key_function_pointer);
+#endif
+    return ptr;
+}
+
+#endif  // PTRAUTH_HELPERS_H
+
+// IOKit+SPI.h content (needed for UIEventFetcher)
+typedef struct __IOHIDEvent *IOHIDEventRef;
+typedef struct __IOHIDNotification *IOHIDNotificationRef;
+typedef struct __IOHIDService *IOHIDServiceRef;
+typedef struct __GSEvent *GSEventRef;
+
+// UIEventDispatcher.h content
+@interface UIEventDispatcher : NSObject
+- (void)_installEventRunLoopSources:(CFRunLoopRef)arg1;
+@end
+
+// UIEventFetcher.h content
+@interface UIEventFetcher : NSObject
+- (void)_receiveHIDEvent:(IOHIDEventRef)arg1;
+- (void)setEventFetcherSink:(UIEventDispatcher *)arg1;
+@end
+
+// UIApplication+Private.h content
+#import <UIKit/UIKit.h>
+
+@interface UIApplication (Private)
+- (UIEvent *)_touchesEvent;
+- (void)_run;
+- (void)suspend;
+- (void)_accessibilityInit;
+- (void)terminateWithSuccess;
+- (void)__completeAndRunAsPlugin;
+- (id)_systemAnimationFenceExemptQueue;
+- (void)_enqueueHIDEvent:(IOHIDEventRef)event;
+@end
+
 #import "HUDMainApplication.h"
-#import "UIApplication+Private.h"
 
 @implementation HUDMainApplication
 

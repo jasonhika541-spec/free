@@ -30,11 +30,12 @@ jobs:
         sudo git clone --recursive https://github.com/theos/theos.git $THEOS
         sudo chown -R $(id -u):$(id -g) $THEOS
         
-        # Link iOS SDK
+        # Create SDK directory and link current iOS SDK
+        mkdir -p $THEOS/sdks
         XCODE_PATH=$(xcode-select -p)
         IOS_SDK_PATH="$XCODE_PATH/Platforms/iPhoneOS.platform/Developer/SDKs"
-        FIRST_SDK=$(ls "$IOS_SDK_PATH" | grep "iPhoneOS.*\.sdk" | head -1)
-        ln -sf "$IOS_SDK_PATH/$FIRST_SDK" "$THEOS/sdks/iPhoneOS.sdk"
+        CURRENT_SDK=$(ls "$IOS_SDK_PATH" | grep "iPhoneOS.*\.sdk" | head -1)
+        ln -sf "$IOS_SDK_PATH/$CURRENT_SDK" "$THEOS/sdks/iPhoneOS.sdk"
         
         echo "THEOS=/opt/theos" >> $GITHUB_ENV
         echo "PATH=/opt/theos/bin:$PATH" >> $GITHUB_ENV

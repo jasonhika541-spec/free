@@ -82,6 +82,21 @@ jobs:
         mkdir -p $THEOS/include/
         cp -r headers/* $THEOS/include/ 2>/dev/null || true
         
+        # Verify headers were copied
+        echo "Verifying header copy:"
+        echo "Headers in project:"
+        ls -la headers/
+        echo "Headers in Theos vendor/include:"
+        ls -la $THEOS/vendor/include/ | head -10
+        echo "Headers in Theos include:"
+        ls -la $THEOS/include/ | head -10
+        
+        # Test if BackboardServices.h is accessible
+        echo "Testing BackboardServices.h access:"
+        test -f "headers/BackboardServices.h" && echo "✅ Found in headers/" || echo "❌ Not found in headers/"
+        test -f "$THEOS/vendor/include/BackboardServices.h" && echo "✅ Found in Theos vendor/include/" || echo "❌ Not found in Theos vendor/include/"
+        test -f "$THEOS/include/BackboardServices.h" && echo "✅ Found in Theos include/" || echo "❌ Not found in Theos include/"
+        
         # Verify SDK installation
         echo "Installed SDKs:"
         ls -la $THEOS/sdks/
@@ -140,7 +155,11 @@ jobs:
         
         # Show compiler include paths
         echo "Testing compiler include paths:"
-        clang -v -E -x objective-c /dev/null -I headers 2>&1 | grep "include" || true
+        echo '#include "BackboardServices.h"' | clang -v -E -x objective-c - -I headers -I $THEOS/vendor/include -I $THEOS/include 2>&1 | grep -E "(include|error)" | head -10 || true
+        
+        # Show what clang can find
+        echo "Testing clang header search:"
+        clang -v -E -x objective-c /dev/null -I headers 2>&1 | grep "search starts here" -A 10 || true
         
         # Use simple makefile with absolute paths
         echo "Using simplified makefile..."
@@ -153,8 +172,24 @@ jobs:
         export TARGET="iphone:clang"
         echo "Using TARGET: $TARGET"
         
+        # Create additional header symlinks in current directory
+        echo "Creating header symlinks..."
+        ln -sf headers/BackboardServices.h BackboardServices.h 2>/dev/null || true
+        ln -sf headers/AXEventRepresentation.h AXEventRepresentation.h 2>/dev/null || true
+        ln -sf headers/UIApplication+Private.h UIApplication+Private.h 2>/dev/null || true
+        
+        # Also try copying headers to sources directory
+        cp headers/*.h sources/ 2>/dev/null || true
+        
+        echo "Header files in current directory:"
+        ls -la *.h 2>/dev/null || echo "No .h files in current directory"
+        echo "Header files in sources directory:"
+        ls -la sources/*.h 2>/dev/null | head -5 || echo "No .h files in sources directory"
+        
         # Try building with different makefile variants (from simplest to complex)
-        if make -f makefile.noversion package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
+        if make -f makefile.aggressive package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
+          echo "✅ Build successful with aggressive makefile!"
+        elif make -f makefile.noversion package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
           echo "✅ Build successful with no-version makefile!"
         elif make -f makefile.simple package FINALPACKAGE=1 FOR_RELEASE=1 V=1; then
           echo "✅ Build successful with simple makefile!"
@@ -163,10 +198,11 @@ jobs:
         else
           echo "All makefiles failed, trying with manual flags..."
           
-          # Try with manual compiler flags
+          # Try with very aggressive manual compiler flags
           CURRENT_DIR=$(pwd)
           make package FINALPACKAGE=1 FOR_RELEASE=1 TARGET=iphone:clang \
-            crepware_CFLAGS="-I${CURRENT_DIR}/headers -I${CURRENT_DIR}/sources -I${CURRENT_DIR}/sources/KIF -I${THEOS}/vendor/include -I${THEOS}/include -fobjc-arc -Wno-deprecated-declarations" || exit 1
+            crepware_CFLAGS="-I. -I${CURRENT_DIR}/headers -I${CURRENT_DIR}/sources -I${CURRENT_DIR}/sources/KIF -I${THEOS}/vendor/include -I${THEOS}/include -fobjc-arc -Wno-deprecated-declarations" \
+            V=1 || exit 1
         fi
         
         # Check build result

@@ -39,8 +39,15 @@ void GSEventRegisterEventCallBack(void (*)(GSEventRef));
 }
 #endif
 
-// AXEventHandInfoRepresentation forward declaration
-@class AXEventHandInfoRepresentation;
+// AXEventPathInfoRepresentation.h content
+@interface AXEventPathInfoRepresentation : NSObject
+@property (assign, nonatomic) unsigned char pathIdentity;
+@end
+
+// AXEventHandInfoRepresentation.h content
+@interface AXEventHandInfoRepresentation : NSObject
+- (NSArray <AXEventPathInfoRepresentation *> *)paths;
+@end
 
 // AXEventRepresentation.h content
 @interface AXEventRepresentation : NSObject
